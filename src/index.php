@@ -7,8 +7,7 @@ ini_set('default_charset', 'UTF-8');
 date_default_timezone_set('America/Lima');
 
 // Función simple de autoload
-function cargarClase($nombreClase) {
-    // Rutas donde se buscarán las clases
+function cargarClase($nombreClase){
     $rutas = [
         'Interfaces/',
         'Models/',
@@ -17,24 +16,80 @@ function cargarClase($nombreClase) {
         'Notifications/',
         'Repositories/',
         'Services/',
-        // 'src/Database/', // Descomentar si tienes clases de base de datos
-        // 'src/Config/'    // Descomentar si tienes clases de configuración
+        'Database/',
+        'Factories/',
+        'Config/'
     ];
-    
-    // Recorremos cada ruta para buscar el archivo de la clase
+
     foreach ($rutas as $ruta) {
-        $archivo = __DIR__.'/'. $ruta . $nombreClase . '.php';
-        // Si el archivo existe, lo incluimos y salimos de la función
+        $archivo = __DIR__ . '/' . $ruta . $nombreClase . '.php';
         if (file_exists($archivo)) {
             require_once $archivo;
-            return; 
+            return;
         }
     }
-    //throw new Exception("La clase $nombreClase no pudo ser cargada automáticamente. Archivo no encontrado en las rutas especificadas.");
+    // Opcional: para depurar clases no encontradas
+    // die("Error: No se pudo cargar la clase {$nombreClase}. Ruta buscada: " . implode(', ', array_map(fn($r) => __DIR__ . '/' . $r . $nombreClase . '.php', $rutas)));
 }
 
-// Registrar la función 'cargarClase' como autoloader
 spl_autoload_register('cargarClase');
+
+try { // Se envuelve todo el contenido principal en un bloque try-catch
+
+    // ===========================================
+    // CONEXIÓN A LA BASE DE DATOS
+    // ===========================================
+    // Asegúrate de que ConexionBaseDeDatos.php existe y tiene el código correcto.
+    // Esto intentará conectarse a la DB al obtener la instancia
+    $conexion_pdo = ConexionBaseDeDatos::getInstance();
+
+    // ===========================================
+    // INICIALIZACIÓN DE DEPENDENCIAS
+    // ===========================================
+
+    // Aquí es donde cambias al repositorio de base de datos
+    // Usamos RepositorioEmpleadoMySQL ya que estás trabajando con DB
+    $repositorio = new RepositorioEmpleadoMySQL($conexion_pdo); // ¡Cambiado!
+
+    // Configurar notificaciones
+    $gestorNotificaciones = new GestorNotificaciones();
+    $gestorNotificaciones->agregarNotificador(new NotificacionEmail());
+    $gestorNotificaciones->agregarNotificador(new NotificacionSms());
+
+    // Crear servicio principal
+    $servicioEmpleados = new ServicioGestionEmpleados($repositorio, $gestorNotificaciones); //
+
+    // ===========================================
+    // CREAR EMPLEADOS DE DEMOSTRACIÓN (OPCIONAL/CONDICIONAL)
+    // ===========================================
+    // Esto es para que se creen si la DB está vacía. Desactívalo o coméntalo después de la primera ejecución.
+    // Usamos obtenerTodosLosEmpleados() para verificar la DB, como corregimos previamente.
+    if (empty($servicioEmpleados->obtenerTodosLosEmpleados())) {
+        $empleado1 = new EmpleadoTiempoCompleto(null, "María García", "maria@empresa.com", 5000.0, "Gerente", 500.0);
+        $empleado2 = new EmpleadoMedioTiempo(null, "Carlos Ruiz", "carlos@empresa.com", 2500.0, 20);
+        $empleado3 = new EmpleadoContratista(null, "Ana López", "ana@freelance.com", 3000.0, 150.0);
+
+        $servicioEmpleados->agregarEmpleado($empleado1);
+        $servicioEmpleados->agregarEmpleado($empleado2);
+        $servicioEmpleados->agregarEmpleado($empleado3);
+
+        // Opcional: Recargar los empleados después de agregarlos para que aparezcan en la misma carga de página
+        // En una aplicación real, probablemente harías una redirección o Ajax.
+        $todosLosEmpleados = $servicioEmpleados->obtenerTodosLosEmpleados();
+    } else {
+        $todosLosEmpleados = $servicioEmpleados->obtenerTodosLosEmpleados();
+    }
+
+
+    // ===========================================
+    // LÓGICA DE LA APLICACIÓN (Mostrar datos, etc.)
+    // ===========================================
+
+    // Corregido: Llamar a obtenerResumenSistema() en lugar de obtenerEstadisticas()
+    $resumenSistema = $servicioEmpleados->obtenerResumenSistema();
+
+    // La clase FabricaCalculadoraSalario será cargada por el autoloader
+    $fabricaCalculadora = new FabricaCalculadoraSalario();
 
 ?>
 <!DOCTYPE html>
@@ -43,6 +98,7 @@ spl_autoload_register('cargarClase');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestión de Empleados</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Tu CSS se mantiene intacto */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -93,169 +149,134 @@ spl_autoload_register('cargarClase');
 <body>
     <div class="container">
         <div class="header">
-            <h1>Sistema de Gestión de Empleados</h1>
+            <h1><i class="fas fa-users"></i> Sistema de Gestión de Empleados</h1>
         </div>
 
-        <?php
-        try {
-            // ===============================================
-            // CONFIGURAR EL SISTEMA
-            // ===============================================
-            
-            // Crear repositorio (usando memoria para simplicidad)
-            // La clase RepositorioEmpleadoMemoria será cargada por el autoloader
-            $repositorio = new RepositorioEmpleadoMemoria();
-            
-            // Configurar notificaciones
-            // Las clases GestorNotificaciones, NotificacionEmail, NotificacionSms
-            // serán cargadas por el autoloader
-            $gestorNotificaciones = new GestorNotificaciones();
-            $gestorNotificaciones->agregarNotificador(new NotificacionEmail());
-            $gestorNotificaciones->agregarNotificador(new NotificacionSms());
-            
-            // Crear servicio principal
-            // La clase ServicioGestionEmpleados será cargada por el autoloader
-            // Si RepositorioEmpleadoMemoria implementa InterfazRepositorioEmpleado,
-            // este error se resolverá.
-            $servicioEmpleados = new ServicioGestionEmpleados($repositorio, $gestorNotificaciones);
-            
-            // ===============================================
-            // CREAR EMPLEADOS DE DEMOSTRACIÓN
-            // ===============================================
-            
-            $empleados = [
-                new EmpleadoTiempoCompleto(1, "María García López", "maria@empresa.com", 5000, 1000),
-                new EmpleadoMedioTiempo(2, "Carlos Rodríguez", "carlos@empresa.com", 30, 100),
-                new EmpleadoContratista(3, "Ana Martínez", "ana@freelance.com", 1500, 3),
-                new EmpleadoTiempoCompleto(4, "Luis Hernández", "luis@empresa.com", 4500, 800),
-                new EmpleadoMedioTiempo(5, "Sofia Vásquez", "sofia@empresa.com", 25, 120),
-                new EmpleadoContratista(6, "Pedro Morales", "pedro@freelance.com", 2000, 2)
-            ];
-            
-            // Agregar empleados al sistema
-            foreach ($empleados as $empleado) {
-                $servicioEmpleados->agregarEmpleado($empleado);
-            }
-            
-            // ===============================================
-            // OBTENER DATOS PARA MOSTRAR
-            // ===============================================
-            
-            $todosLosEmpleados = $servicioEmpleados->obtenerTodosLosEmpleados();
-            $estadisticas = $servicioEmpleados->obtenerEstadisticas();
-            // La clase FabricaCalculadoraSalario será cargada por el autoloader
-            $fabricaCalculadora = new FabricaCalculadoraSalario();
-            
-            ?>
-
-            <div class="card">
-                <h2>📊 Estadísticas del Sistema</h2>
-                <div class="estadisticas">
-                    <div class="stat-card">
-                        <h3><?= $estadisticas['total_empleados'] ?></h3>
-                        <p>Total Empleados</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>$<?= number_format($estadisticas['nomina_total'], 2) ?></h3>
-                        <p>Nómina Total</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>$<?= number_format($estadisticas['salario_promedio'], 2) ?></h3>
-                        <p>Salario Promedio</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3><?= count($estadisticas['por_tipo']) ?></h3>
-                        <p>Tipos de Empleado</p>
-                    </div>
+        <div class="card">
+            <h2>📊 Estadísticas del Sistema</h2>
+            <div class="estadisticas">
+                <div class="stat-card">
+                    <h3><?= $resumenSistema['totalEmpleados'] ?></h3> <p>Total Empleados</p>
+                </div>
+                <div class="stat-card">
+                    <h3>$<?= number_format($resumenSistema['nominaTotal'], 2) ?></h3> <p>Nómina Total</p>
+                </div>
+                <div class="stat-card">
+                    <h3>$<?= number_format($resumenSistema['salarioPromedio'], 2) ?></h3> <p>Salario Promedio</p>
+                </div>
+                <div class="stat-card">
+                    <h3><?= count($resumenSistema['tiposEmpleadoConteo']) ?></h3> <p>Tipos de Empleado</p>
                 </div>
             </div>
+        </div>
 
-            <div class="card">
-                <h2>👥 Lista de Empleados</h2>
-                <div class="empleados-grid">
-                    <?php foreach ($todosLosEmpleados as $empleado): 
-                        $calculadora = $fabricaCalculadora->obtenerCalculadora($empleado->obtenerTipo());
-                        $salario = $calculadora->calcularSalario($empleado);
-                        $tipoClase = str_replace('_', '-', $empleado->obtenerTipo());
-                    ?>
-                        <div class="empleado-card <?= $tipoClase ?>">
-                            <h3><?= htmlspecialchars($empleado->obtenerNombre()) ?></h3>
+        <div class="card">
+            <h2>👥 Lista de Empleados</h2>
+            <div class="empleados-grid">
+                <?php foreach ($todosLosEmpleados as $empleado):
+                    // Corregido: Llamar a crearCalculadora() en lugar de obtenerCalculadora()
+                    $calculadora = $fabricaCalculadora->crearCalculadora($empleado->obtenerTipo());
+                    $salario = $calculadora->calcularSalario($empleado);
+                    $tipoClase = str_replace('_', '-', $empleado->obtenerTipo());
+                ?>
+                    <div class="empleado-card <?= $tipoClase ?>">
+                        <h3><?= htmlspecialchars($empleado->obtenerNombre()) ?></h3>
+                        <div class="empleado-info">
+                            📧 <?= htmlspecialchars($empleado->obtenerEmail()) ?>
+                        </div>
+                        <div class="empleado-info">
+                            🆔 ID: <?= $empleado->obtenerId() ?>
+                        </div>
+                        <div class="salario">
+                            💰 $<?= number_format($salario, 2) ?>
+                        </div>
+                        <span class="tipo-badge <?= $tipoClase ?>">
+                            <?= ucfirst(str_replace('_', ' ', $empleado->obtenerTipo())) ?>
+                        </span>
+                        <?php if ($empleado instanceof EmpleadoTiempoCompleto): ?>
                             <div class="empleado-info">
-                                📧 <?= htmlspecialchars($empleado->obtenerEmail()) ?>
+                                💼 Puesto: <?= htmlspecialchars($empleado->obtenerPuesto()) ?>
                             </div>
                             <div class="empleado-info">
-                                🆔 ID: <?= $empleado->obtenerId() ?>
+                                🎁 Bonificación: $<?= number_format($empleado->obtenerBonificacion(), 2) ?>
                             </div>
-                            <div class="salario">
-                                💰 $<?= number_format($salario, 2) ?>
+                        <?php elseif ($empleado instanceof EmpleadoMedioTiempo): ?>
+                            <div class="empleado-info">
+                                ⏰ Horas Semanales: <?= htmlspecialchars($empleado->obtenerHorasSemanales()) ?>
                             </div>
-                            <span class="tipo-badge <?= $tipoClase ?>">
-                                <?= ucfirst(str_replace('_', ' ', $empleado->obtenerTipo())) ?>
-                            </span>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
+                        <?php elseif ($empleado instanceof EmpleadoContratista): ?>
+                            <div class="empleado-info">
+                                💲 Tarifa por Hora: $<?= number_format($empleado->obtenerTarifaHora(), 2) ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Detalle por Tipo de Empleado</h2>
+            <div class="estadisticas">
+                <?php foreach ($resumenSistema['detallePorTipo'] as $tipo => $datos): // Corregido: 'detallePorTipo' de ServicioGestionEmpleados.php ?>
+                    <div class="stat-card">
+                        <h3><?= $datos['cantidad'] ?></h3>
+                        <p><?= ucfirst(str_replace('_', ' ', $tipo)) ?></p>
+                        <small>Promedio: $<?= number_format($datos['promedio'], 2) ?></small> </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚡ Acciones del Sistema</h2>
+            <div class="acciones">
+                <button class="btn btn-primary" onclick="procesarNomina()">
+                    💰 Procesar Nómina
+                </button>
+                <button class="btn btn-success" onclick="generarReporte('json')">
+                    📄 Generar Reporte JSON
+                </button>
+                <button class="btn btn-warning" onclick="generarReporte('csv')">
+                    📊 Generar Reporte CSV
+                </button>
+                <button class="btn btn-primary" onclick="mostrarEstadisticas()">
+                    📈 Ver Estadísticas Detalladas
+                </button>
             </div>
 
-            <div class="card">
-                <h2>📋 Detalle por Tipo de Empleado</h2>
-                <div class="estadisticas">
-                    <?php foreach ($estadisticas['por_tipo'] as $tipo => $datos): ?>
-                        <div class="stat-card">
-                            <h3><?= $datos['cantidad'] ?></h3>
-                            <p><?= ucfirst(str_replace('_', ' ', $tipo)) ?></p>
-                            <small>Promedio: $<?= number_format($datos['salario_promedio'], 2) ?></small>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
+            <div id="resultado"></div>
+        </div>
 
-            <div class="card">
-                <h2>⚡ Acciones del Sistema</h2>
-                <div class="acciones">
-                    <button class="btn btn-primary" onclick="procesarNomina()">
-                        💰 Procesar Nómina
-                    </button>
-                    <button class="btn btn-success" onclick="generarReporte('json')">
-                        📄 Generar Reporte JSON
-                    </button>
-                    <button class="btn btn-warning" onclick="generarReporte('csv')">
-                        📊 Generar Reporte CSV
-                    </button>
-                    <button class="btn btn-primary" onclick="mostrarEstadisticas()">
-                        📈 Ver Estadísticas Detalladas
-                    </button>
-                </div>
-                
-                <div id="resultado"></div>
-            </div>
-
-            <?php
-        } catch (Exception $e) {
-            echo '<div class="card error">';
-            echo '<h2>❌ Error del Sistema</h2>';
-            echo '<p><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
-            echo '<p><strong>Archivo:</strong> ' . $e->getFile() . '</p>';
-            echo '<p><strong>Línea:</strong> ' . $e->getLine() . '</p>';
-            echo '</div>';
-        }
-        ?>
+    <?php
+    } catch (Exception $e) {
+        echo '<div class="card error">';
+        echo '<h2>❌ Error del Sistema</h2>';
+        echo '<p><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+        echo '<p><strong>Archivo:</strong> ' . $e->getFile() . '</p>';
+        echo '<p><strong>Línea:</strong> ' . $e->getLine() . '</p>';
+        echo '</div>';
+    }
+    ?>
     </div>
 
     <script>
+        // Las variables PHP a JavaScript deben ser pasadas dentro del bloque PHP
+        const todosLosEmpleadosJS = <?= json_encode($todosLosEmpleados ?? []) ?>;
+        const estadisticasJS = <?= json_encode($resumenSistema ?? []) ?>; // Se usa estadisticasJS para no confundir con $estadisticas de PHP
+
         function procesarNomina() {
             const btn = event.target;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="loading"></span> Procesando...';
             btn.disabled = true;
-            
-            // Simular procesamiento
+
+            // Aquí deberías hacer una petición AJAX a un script PHP que realmente procese la nómina
+            // Por ahora, simulamos el procesamiento con un setTimeout
             setTimeout(() => {
                 document.getElementById('resultado').innerHTML = `
                     <div class="resultado">
                         <h3>✅ Nómina Procesada Exitosamente</h3>
-                        <p>Se ha procesado la nómina de <?= count($todosLosEmpleados) ?> empleados.</p>
-                        <p>Total procesado: $<?= number_format($estadisticas['nomina_total'], 2) ?></p>
+                        <p>Se ha procesado la nómina de ${todosLosEmpleadosJS.length} empleados.</p>
+                        <p>Total procesado: $${(estadisticasJS.nominaTotal || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         <p>Notificaciones enviadas por email y SMS a todos los empleados.</p>
                     </div>
                 `;
@@ -263,21 +284,21 @@ spl_autoload_register('cargarClase');
                 btn.disabled = false;
             }, 2000);
         }
-        
+
         function generarReporte(formato) {
             const btn = event.target;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="loading"></span> Generando...';
             btn.disabled = true;
-            
-            // Simular generación de reporte
+
+            // Aquí deberías hacer una petición AJAX a un script PHP que realmente genere el reporte
             setTimeout(() => {
                 const formatoMayus = formato.toUpperCase();
                 document.getElementById('resultado').innerHTML = `
                     <div class="resultado">
                         <h3>📄 Reporte ${formatoMayus} Generado</h3>
                         <p>El reporte en formato ${formatoMayus} ha sido generado exitosamente.</p>
-                        <p>Incluye información de <?= count($todosLosEmpleados) ?> empleados.</p>
+                        <p>Incluye información de ${todosLosEmpleadosJS.length} empleados.</p>
                         <p>Archivo guardado como: reporte_empleados_${new Date().toISOString().split('T')[0]}.${formato}</p>
                     </div>
                 `;
@@ -285,22 +306,23 @@ spl_autoload_register('cargarClase');
                 btn.disabled = false;
             }, 1500);
         }
-        
+
         function mostrarEstadisticas() {
-            const estadisticas = <?= json_encode($estadisticas) ?>;
+            // Se usa estadisticasJS que ya contiene los datos del resumenSistema en JavaScript
             let html = '<div class="resultado"><h3>📊 Estadísticas Detalladas</h3>';
-            html += `<p><strong>Total empleados:</strong> ${estadisticas.total_empleados}</p>`;
-            html += `<p><strong>Nómina total:</strong> $${estadisticas.nomina_total.toLocaleString()}</p>`;
-            html += `<p><strong>Salario promedio:</strong> $${estadisticas.salario_promedio.toLocaleString()}</p>`;
-            html += `<p><strong>Salario mínimo:</strong> $${estadisticas.salario_minimo.toLocaleString()}</p>`;
-            html += `<p><strong>Salario máximo:</strong> $${estadisticas.salario_maximo.toLocaleString()}</p>`;
-            
+            html += `<p><strong>Total empleados:</strong> ${estadisticasJS.totalEmpleados}</p>`; // Corregido el nombre de la clave
+            html += `<p><strong>Nómina total:</strong> $${(estadisticasJS.nominaTotal || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>`; // Corregido el nombre de la clave
+            html += `<p><strong>Salario promedio:</strong> $${(estadisticasJS.salarioPromedio || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>`; // Corregido el nombre de la clave
+            html += `<p><strong>Salario mínimo:</strong> $${(estadisticasJS.salarioMinimo || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>`; // Nuevo campo
+            html += `<p><strong>Salario máximo:</strong> $${(estadisticasJS.salarioMaximo || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>`; // Nuevo campo
+
             html += '<h4>Por tipo de empleado:</h4><ul>';
-            for (const [tipo, datos] of Object.entries(estadisticas.por_tipo)) {
-                html += `<li><strong>${tipo.replace('_', ' ')}:</strong> ${datos.cantidad} empleados, promedio: $${datos.salario_promedio.toLocaleString()}</li>`;
+            // Iterar sobre 'detallePorTipo' que es el que contiene el desglose
+            for (const [tipo, datos] of Object.entries(estadisticasJS.detallePorTipo || {})) {
+                html += `<li><strong>${tipo.replace('_', ' ')}:</strong> ${datos.cantidad} empleados, promedio: $${(datos.promedio || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</li>`;
             }
             html += '</ul></div>';
-            
+
             document.getElementById('resultado').innerHTML = html;
         }
     </script>

@@ -2,23 +2,17 @@
 
 class FabricaCalculadoraSalario
 {
-    private array $calculadoras = [];
-    
-    public function __construct()
+    public function crearCalculadora(string $tipoEmpleado): InterfazCalculadoraSalario
     {
-        $this->calculadoras = [
-            'tiempo_completo' => new CalculadoraSalarioTiempoCompleto(),
-            'medio_tiempo' => new CalculadoraSalarioMedioTiempo(),
-            'contratista' => new CalculadoraSalarioContratista()
-        ];
-    }
-    
-    public function obtenerCalculadora(string $tipoEmpleado): InterfazCalculadoraSalario
-    {
-        if (!isset($this->calculadoras[$tipoEmpleado])) {
-            throw new InvalidArgumentException("No se encontró calculadora para el tipo de empleado: {$tipoEmpleado}");
+        switch ($tipoEmpleado) {
+            case 'tiempo_completo':
+                return new CalculadoraSalarioTiempoCompleto();
+            case 'medio_tiempo':
+                return new CalculadoraSalarioMedioTiempo();
+            case 'contratista':
+                return new CalculadoraSalarioContratista();
+            default:
+                throw new InvalidArgumentException("Tipo de empleado desconocido: " . $tipoEmpleado);
         }
-        
-        return $this->calculadoras[$tipoEmpleado];
     }
 }

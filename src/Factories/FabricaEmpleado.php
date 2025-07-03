@@ -15,7 +15,8 @@ class FabricaEmpleado
                     $datos['nombre'],
                     $datos['email'],
                     (float)$datos['salario_base'],
-                    $datos['puesto']
+                    $datos['puesto'],
+                    (float)($datos['bonificacion'] ?? 0.0)
                 );
             case 'medio_tiempo':
                 return new EmpleadoMedioTiempo(

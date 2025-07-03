@@ -2,28 +2,21 @@
 
 class EmpleadoContratista extends Empleado
 {
-    private int $proyectosCompletados;
-    private float $tarifaPorProyecto;
-    
-    public function __construct(int $id, string $nombre, string $email, float $tarifaPorProyecto, int $proyectosCompletados)
+    private float $tarifaHora;
+
+    public function __construct(?int $id, string $nombre, string $email, float $salarioBase, float $tarifaHora)
     {
-        parent::__construct($id, $nombre, $email, $tarifaPorProyecto);
-        $this->proyectosCompletados = $proyectosCompletados;
-        $this->tarifaPorProyecto = $tarifaPorProyecto;
+        parent::__construct($id, $nombre, $email, $salarioBase);
+        $this->tarifaHora = $tarifaHora;
     }
-    
+
     public function obtenerTipo(): string
     {
         return 'contratista';
     }
-    
-    public function obtenerProyectosCompletados(): int
+
+    public function obtenerTarifaHora(): float 
     {
-        return $this->proyectosCompletados;
-    }
-    
-    public function obtenerTarifaPorProyecto(): float
-    {
-        return $this->tarifaPorProyecto;
+        return $this->tarifaHora;
     }
 }

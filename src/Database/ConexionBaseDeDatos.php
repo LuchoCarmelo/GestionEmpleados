@@ -11,11 +11,10 @@ class ConexionBaseDeDatos
 
     private function __construct()
     {
-
         $this->host = 'localhost';
-        $this->dbname = 'sistema_empleados'; // Asegúrate de que esta base de datos exista
-        $this->user = 'root'; // Tu usuario de base de datos
-        $this->password = '12345678'; // Tu contraseña de base de datos
+        $this->dbname = 'sistema_empleados';
+        $this->user = 'root';
+        $this->password = '123456';
         $this->charset = 'utf8mb4';
 
         $dsn = "mysql:host={$this->host};dbname={$this->dbname};charset={$this->charset}";
@@ -28,7 +27,6 @@ class ConexionBaseDeDatos
         try {
             self::$instance = new PDO($dsn, $this->user, $this->password, $options);
         } catch (PDOException $e) {
-            // En un entorno de producción, loguear el error en lugar de morir
             die("Error de conexión a la base de datos: " . $e->getMessage());
         }
     }
@@ -36,7 +34,7 @@ class ConexionBaseDeDatos
     public static function getInstance(): PDO
     {
         if (self::$instance === null) {
-            new self(); // Llama al constructor privado para crear la instancia
+            new self();
         }
         return self::$instance;
     }

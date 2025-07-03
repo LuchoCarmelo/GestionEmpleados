@@ -8,6 +8,6 @@ class CalculadoraSalarioContratista implements InterfazCalculadoraSalario
             throw new InvalidArgumentException('Se esperaba EmpleadoContratista');
         }
         
-        return $empleado->obtenerTarifaPorProyecto() * $empleado->obtenerProyectosCompletados();
+        return $empleado->obtenerSalarioBase() * $empleado->obtenerTarifaHora();
     }
 }

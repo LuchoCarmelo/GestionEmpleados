@@ -2,21 +2,21 @@
 
 class EmpleadoMedioTiempo extends Empleado
 {
-    private int $horasTrabajadas;
-    
-    public function __construct(int $id, string $nombre, string $email, float $tarifaPorHora, int $horasTrabajadas)
+    private int $horasSemanales;
+
+    public function __construct(?int $id, string $nombre, string $email, float $salarioBase, int $horasSemanales)
     {
-        parent::__construct($id, $nombre, $email, $tarifaPorHora);
-        $this->horasTrabajadas = $horasTrabajadas;
+        parent::__construct($id, $nombre, $email, $salarioBase);
+        $this->horasSemanales = $horasSemanales;
     }
-    
+
     public function obtenerTipo(): string
     {
         return 'medio_tiempo';
     }
-    
-    public function obtenerHorasTrabajadas(): int
+
+    public function obtenerHorasSemanales(): int // Este es el método que se estaba quejando Intelephense
     {
-        return $this->horasTrabajadas;
+        return $this->horasSemanales;
     }
 }
