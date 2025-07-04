@@ -68,6 +68,7 @@ try { // Se envuelve todo el contenido principal en un bloque try-catch
         $empleado1 = new EmpleadoTiempoCompleto(null, "María García", "maria@empresa.com", 5000.0, "Gerente", 500.0);
         $empleado2 = new EmpleadoMedioTiempo(null, "Carlos Ruiz", "carlos@empresa.com", 2500.0, 20);
         $empleado3 = new EmpleadoContratista(null, "Ana López", "ana@freelance.com", 3000.0, 150.0);
+        $empleado4 = new EmpleadoTiempoCompleto(null, "Luis Carmelo", "carmelo@muniamarilis.com", 1500.0, "Operador");
 
         $servicioEmpleados->agregarEmpleado($empleado1);
         $servicioEmpleados->agregarEmpleado($empleado2);

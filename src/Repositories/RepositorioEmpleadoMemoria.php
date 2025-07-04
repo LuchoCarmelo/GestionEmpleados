@@ -380,10 +380,10 @@ class RepositorioEmpleadoMemoria implements InterfazRepositorioEmpleado
             if ($empleado instanceof EmpleadoTiempoCompleto) {
                 $datosEmpleado['bonificacion'] = $empleado->obtenerBonificacion();
             } elseif ($empleado instanceof EmpleadoMedioTiempo) {
-                $datosEmpleado['horas_trabajadas'] = $empleado->obtenerHorasTrabajadas();
+                $datosEmpleado['horas_trabajadas'] = $empleado->obtenerHorasSemanales();
             } elseif ($empleado instanceof EmpleadoContratista) {
-                $datosEmpleado['proyectos_completados'] = $empleado->obtenerProyectosCompletados();
-                $datosEmpleado['tarifa_por_proyecto'] = $empleado->obtenerTarifaPorProyecto();
+                $datosEmpleado['proyectos_completados'] = $empleado->obtenerSalarioBase();
+                $datosEmpleado['tarifa_por_proyecto'] = $empleado->obtenerTarifaHora();
             }
             
             $datos[] = $datosEmpleado;
@@ -516,9 +516,9 @@ class RepositorioEmpleadoMemoria implements InterfazRepositorioEmpleado
             }
             
             // Verificaciones específicas por tipo
-            if ($empleado instanceof EmpleadoMedioTiempo && $empleado->obtenerHorasTrabajadas() <= 0) {
+            if ($empleado instanceof EmpleadoMedioTiempo && $empleado->obtenerHorasSemanales() <= 0) {
                 $advertencias[] = "Empleado de medio tiempo {$id} tiene 0 horas trabajadas";
-            } elseif ($empleado instanceof EmpleadoContratista && $empleado->obtenerProyectosCompletados() <= 0) {
+            } elseif ($empleado instanceof EmpleadoContratista && $empleado->obtenerSalarioBase() <= 0) {
                 $advertencias[] = "Empleado contratista {$id} tiene 0 proyectos completados";
             }
         }
