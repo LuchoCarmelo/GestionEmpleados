@@ -14,7 +14,7 @@ class ConexionBaseDeDatos
         $this->host = 'localhost';
         $this->dbname = 'sistema_empleados';
         $this->user = 'root';
-        $this->password = '123456';
+        $this->password = '';
         $this->charset = 'utf8mb4';
 
         $dsn = "mysql:host={$this->host};dbname={$this->dbname};charset={$this->charset}";

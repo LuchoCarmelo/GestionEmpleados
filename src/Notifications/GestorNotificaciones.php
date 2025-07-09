@@ -10,7 +10,6 @@ class GestorNotificaciones
         $this->notificadores[] = $notificador;
         
         if ($this->registroActivado) {
-            echo "✅ Notificador agregado al sistema (Total: " . count($this->notificadores) . ")\n";
         }
     }
     
@@ -19,12 +18,9 @@ class GestorNotificaciones
     $resultados = [];
 
     if (empty($this->notificadores)) {
-        echo "⚠️ No hay notificadores configurados\n";
         return $resultados; // Aquí ya devuelves un array
     }
 
-    echo "📢 Enviando notificaciones a: {$destinatario}\n";
-    echo "-------------------------------------------\n";
 
     foreach ($this->notificadores as $indice => $notificador) {
         try {

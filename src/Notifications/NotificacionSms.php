@@ -14,17 +14,8 @@ class NotificacionSms implements InterfazNotificacion
     
     public function enviar(string $destinatario, string $mensaje): bool
     {
-        // Aquí iría la lógica real de envío de SMS
-        // Por ejemplo, usando Twilio API o similar
-        
+    
         $mensajeCorto = $this->acortarMensaje($mensaje, 160);
-        
-        // Simulación de envío
-        echo "📱 Enviando SMS a {$destinatario}\n";
-        echo "   Mensaje: {$mensajeCorto}\n";
-        echo "   API: {$this->apiUrl}\n\n";
-        
-        // En producción, aquí harías la llamada a la API real
         return true;
     }
     

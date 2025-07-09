@@ -27,13 +27,7 @@ class NotificacionEmail implements InterfazNotificacion
         
         $cuerpoEmail = $this->construirCuerpoEmail($mensaje);
         
-        // Simulación de envío
-        echo "📧 Enviando email a {$destinatario}\n";
-        echo "   Asunto: {$asunto}\n";
-        echo "   Mensaje: {$mensaje}\n";
-        echo "   Servidor SMTP: {$this->servidorSmtp}:{$this->puertoSmtp}\n\n";
-        
-        // En producción, usar: mail($destinatario, $asunto, $cuerpoEmail, $cabeceras);
+    
         return true;
     }
     

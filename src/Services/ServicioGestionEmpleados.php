@@ -21,9 +21,9 @@ class ServicioGestionEmpleados
         if ($exito) {
             $mensaje = "Nuevo empleado registrado: " . $empleado->obtenerNombre();
             $this->gestorNotificaciones->enviarNotificaciones($empleado->obtenerEmail(), $mensaje);
-            echo "✅ " . $mensaje . "\n";
+            
         } else {
-            echo "❌ Error al agregar empleado: " . $empleado->obtenerNombre() . "\n";
+            
         }
         return $exito;
     }
@@ -45,9 +45,9 @@ class ServicioGestionEmpleados
         if ($exito) {
             $mensaje = "Empleado actualizado: " . $empleado->obtenerNombre();
             $this->gestorNotificaciones->enviarNotificaciones($empleado->obtenerEmail(), $mensaje);
-            echo "✅ " . $mensaje . "\n";
+          
         } else {
-            echo "❌ Error al actualizar empleado: " . $empleado->obtenerNombre() . "\n";
+           
         }
         return $exito;
     }
@@ -56,7 +56,7 @@ class ServicioGestionEmpleados
     {
         $empleado = $this->repositorio->buscarPorId($id);
         if (!$empleado) {
-            echo "❌ No se encontró el empleado con ID: " . $id . "\n";
+           
             return false;
         }
 
@@ -64,31 +64,25 @@ class ServicioGestionEmpleados
         if ($exito) {
             $mensaje = "Empleado eliminado: " . $empleado->obtenerNombre();
             // Podrías enviar una notificación al admin o loggear
-            echo "✅ " . $mensaje . "\n";
         } else {
-            echo "❌ Error al eliminar empleado: " . $empleado->obtenerNombre() . "\n";
+           
         }
         return $exito;
     }
 
     public function procesarNomina(): void
     {
-        echo "\n--- Procesando Nómina ---\n";
         $empleados = $this->repositorio->buscarTodos();
         foreach ($empleados as $empleado) {
             try {
                 $calculadora = $this->fabricaCalculadora->crearCalculadora($empleado->obtenerTipo());
                 $salario = $calculadora->calcularSalario($empleado);
                 // Aquí se corrigió la sintaxis de la variable $salario
-                echo "✅ {$empleado->obtenerNombre()} ({$empleado->obtenerTipo()}): Salario Calculado = $" . number_format($salario, 2) . "\n";
                 // En una aplicación real, este salario se registraría en algún lugar
             } catch (InvalidArgumentException $e) {
-                echo "❌ Error al calcular salario para {$empleado->obtenerNombre()}: " . $e->getMessage() . "\n";
             } catch (Exception $e) {
-                echo "❌ Error inesperado para {$empleado->obtenerNombre()}: " . $e->getMessage() . "\n";
             }
         }
-        echo "--- Nómina Procesada ---\n";
     }
 
     public function obtenerResumenSistema(): array
